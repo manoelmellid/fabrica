@@ -2,3 +2,4 @@ streamlit
 moviepy
 ffmpeg-python
 gdown
+imageio[ffmpeg]
