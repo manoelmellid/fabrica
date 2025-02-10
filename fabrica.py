@@ -7,11 +7,16 @@ from moviepy.video.io.VideoFileClip import VideoFileClip
 st.title("Procesar y dividir videos MP4")
 
 # Función para dividir el video en fragmentos de 3 minutos (180 segundos)
+# Función para dividir el video en fragmentos de 3 minutos (180 segundos)
 def split_video_ffmpeg(input_video):
     output_pattern = "output_part_%03d.mp4"
     cmd = f"ffmpeg -i {input_video} -c copy -map 0 -segment_time 180 -f segment -reset_timestamps 1 {output_pattern}"
     os.system(cmd)
-
+    
+    # Obtener los archivos generados
+    output_files = [f"output_part_{i:03d}.mp4" for i in range(1, len(os.listdir()) + 1) if f"output_part_{i:03d}.mp4" in os.listdir()]
+    return output_files
+    
 split_video_ffmpeg("downloaded_video.mp4")
 
 # Función para crear un ZIP con los fragmentos
@@ -45,10 +50,11 @@ elif uploaded_file is not None:
         f.write(uploaded_file.read())
 
 # Procesar el video si se ha subido o descargado uno
+# Procesar el video si se ha subido o descargado uno
 if video_path:
     st.write("Procesando el video... Esto puede tardar unos minutos.")
     
-    output_files = split_video(video_path)
+    output_files = split_video_ffmpeg(video_path)  # Cambiar de split_video a split_video_ffmpeg
 
     if output_files:
         zip_path = create_zip(output_files)
