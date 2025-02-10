@@ -2,7 +2,6 @@ import streamlit as st
 import os
 import gdown
 import zipfile
-from moviepy.video.io.VideoFileClip import VideoFileClip
 
 st.title("Procesar y dividir videos MP4")
 
