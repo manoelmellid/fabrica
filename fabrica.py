@@ -1,24 +1,37 @@
 import streamlit as st
 import os
 import gdown
+import zipfile
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
 st.title("Procesar y dividir videos MP4")
 
-# Función para dividir el video
+# Función para dividir el video en fragmentos de 3 minutos (180 segundos)
 def split_video(video_path, chunk_length=180):
-    clips = []
-    video = VideoFileClip(video_path)
-    duration = int(video.duration)
-    
-    for start in range(0, duration, chunk_length):
-        end = min(start + chunk_length, duration)
-        clip = video.subclip(start, end)
-        clip_path = f"output_part_{start//chunk_length + 1}.mp4"
-        clip.write_videofile(clip_path, codec="libx264", audio_codec="aac")
-        clips.append(clip_path)
-    
-    return clips
+    try:
+        video = VideoFileClip(video_path)
+        duration = int(video.duration)
+        clips = []
+        
+        for start in range(0, duration, chunk_length):
+            end = min(start + chunk_length, duration)
+            clip = video.subclip(start, end)
+            clip_path = f"part_{start//chunk_length + 1}.mp4"
+            clip.write_videofile(clip_path, codec="libx264", audio_codec="aac")
+            clips.append(clip_path)
+
+        video.close()
+        return clips
+    except Exception as e:
+        st.error(f"Error al procesar el video: {e}")
+        return []
+
+# Función para crear un ZIP con los fragmentos
+def create_zip(output_files, zip_name="videos_divididos.zip"):
+    with zipfile.ZipFile(zip_name, "w") as zipf:
+        for file in output_files:
+            zipf.write(file, os.path.basename(file))
+    return zip_name
 
 # Opción 1: Subir archivo manualmente
 uploaded_file = st.file_uploader("Sube un archivo MP4", type=["mp4"])
@@ -45,17 +58,17 @@ elif uploaded_file is not None:
 
 # Procesar el video si se ha subido o descargado uno
 if video_path:
-    st.video(video_path)
-    st.write("Dividiendo el video en fragmentos de 3 minutos...")
+    st.write("Procesando el video... Esto puede tardar unos minutos.")
     
     output_files = split_video(video_path)
-    
-    for file in output_files:
-        st.video(file)
-        with open(file, "rb") as f:
-            st.download_button(f"Descargar {file}", f, file, mime="video/mp4")
 
-    # Eliminar archivos temporales
-    os.remove(video_path)
-    for file in output_files:
-        os.remove(file)
+    if output_files:
+        zip_path = create_zip(output_files)
+        with open(zip_path, "rb") as zipf:
+            st.download_button("Descargar todos los clips", zipf, file_name=zip_path, mime="application/zip")
+        
+        # Limpiar archivos temporales
+        os.remove(video_path)
+        for file in output_files:
+            os.remove(file)
+        os.remove(zip_path)
