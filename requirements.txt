@@ -1,2 +1,4 @@
 streamlit
 os
+moviepy
+ffmpeg-python
