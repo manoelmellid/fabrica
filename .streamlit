@@ -1,0 +1,11 @@
+[server]
+headless=true
+
+script = "fabrica.py"
+
+[client]
+showErrorDetails = false
+
+[theme]
+base="light"
+primaryColor="#0d65b7"
